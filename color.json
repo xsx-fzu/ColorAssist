@@ -1,0 +1,99 @@
+{
+    "name": "cvdcolor",
+    "phase": "train", // train or val
+    "gpu_ids": [
+        0
+    ],
+    "path": { //set the path
+        "stage": "train", //change train or val folder to save
+        "log": "logs",
+        "tb_logger": "tb_logger",
+        "results": "results",
+        "checkpoint": "checkpoint",
+        "resume_state":null
+        //"resume_state": "/root/7.3T/XSX/Ablation-/experiments_train_CVD_FZU_unet5CVDnet3_CVDP1_loss_simple0.5loss_contrast_global0.5loss/cvdcolor_250724_202640/checkpoint/I380000_E561"
+        //"resume_state": "unet5_final_experiment/experiments_train_CVD_mydatasetnew_unet5/cvdcolor_240804_003328_right/checkpoint/I600000_E1770" //pretrain model or training state
+    },
+    "datasets": {
+        "train": {
+            "name": "cvd",
+            "dataroot": "/root/7.3T/XSX/dataset/FZU/train",
+            "datatype": "img", //lmdb or img, path of img files
+            "l_resolution": 256, // low resolution need to super_resolution
+            "r_resolution": 256, // high resolution*/
+            "batch_size": 6,
+            "num_workers": 4,
+            "use_shuffle": true,
+            "data_len": -1 // -1 represents all data used in train
+        },
+        "val": {
+            "name": "cvd",
+            "dataroot": "/root/7.3T/XSX/dataset/FZU/test",
+            //"dataroot": "XDU-CVDdataset/test",
+            //"dataroot": "testcard2",
+            "datatype": "img", //lmdb or img, path of img files
+            "l_resolution": 256,
+            "r_resolution": 256,
+            "data_len": -1 // data length in validation
+        }
+    },
+    "model": {
+        "which_model_G": "trans", // use the ddpm or sr3 network structure
+        "finetune_norm": false,
+        "unet": {
+            "in_channel": 6, //6
+            "out_channel": 3,
+            "inner_channel": 48,
+            "norm_groups": 24,
+            "channel_multiplier": [
+                1,
+                2,
+                4,
+                8,
+                8
+            ],
+            "attn_res": [
+                16
+            ],
+            "res_blocks": 2,
+            "dropout": 0.2
+        },
+        "beta_schedule": { // use munual beta_schedule for acceleration
+            "train": {
+                "schedule": "linear",
+                "n_timestep": 2000,
+                "linear_start": 1e-6,
+                "linear_end": 1e-2
+            },
+            "val": {
+                "schedule": "linear",
+                "n_timestep": 2000,
+                "linear_start": 1e-6,
+                "linear_end": 1e-2
+            }
+        },
+        "diffusion": {
+            "image_size": 128,
+            "channels": 3, //sample channel
+            "conditional": true // unconditional generation or unconditional generation(super_resolution)
+        }
+    },
+    "train": {
+        "n_iter": 1000000,
+        "val_freq": 20000, //20000
+        "save_checkpoint_freq": 20000,
+        "print_freq": 2000, //2000
+        "optimizer": {
+            "type": "adam",
+            "lr": 1e-4
+        },
+        "ema_scheduler": { // not used now
+            "step_start_ema": 5000,
+            "update_ema_every": 1,
+            "ema_decay": 0.9999
+        }
+    },
+    "wandb": {
+        "project": "sr_ffhq"
+    }
+}
